@@ -3,10 +3,10 @@ const mongoose = require('mongoose');
 const SubtaskSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String },
-    isCompleted: { type: Boolean, default: false },
-    priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
-    createdAt: { type: Date, default: Date.now }
-});
+    status: { type: String, enum: ['Todo', 'In Progress', 'Done'], default: 'Todo' },
+    dueDate: { type: Date },
+    priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' }
+}, { timestamps: true });
 
 const TaskSchema = new mongoose.Schema({
     title: { type: String, required: true },

@@ -114,6 +114,7 @@ router.post('/:id/subtasks', async (req, res) => {
         task.subtasks.push({
             title: req.body.title,
             description: req.body.description,
+            dueDate: req.body.dueDate,
             priority: req.body.priority || 'Medium'
         });
         const updatedTask = await task.save();
@@ -135,25 +136,21 @@ router.put('/:id/subtasks/:subtaskId', async (req, res) => {
         const subtask = task.subtasks.id(req.params.subtaskId);
         if (!subtask) return res.status(404).json({ message: 'Subtask not found' });
 
-        // If body contains isCompleted, set it
-        if (req.body.isCompleted !== undefined) {
-            subtask.isCompleted = req.body.isCompleted;
-            await logHistory(task._id, 'Subtask Updated', `Subtask "${subtask.title}" marked as ${subtask.isCompleted ? 'Done' : 'Pending'}.`);
-        }
-        // If body has no update fields, assume toggle (legacy behavior support)
-        else if (!req.body.title && !req.body.description && !req.body.priority) {
-            subtask.isCompleted = !subtask.isCompleted;
-            await logHistory(task._id, 'Subtask Updated', `Subtask "${subtask.title}" marked as ${subtask.isCompleted ? 'Done' : 'Pending'}.`);
+        // If body contains status, set it
+        if (req.body.status) {
+            subtask.status = req.body.status;
+            await logHistory(task._id, 'Subtask Updated', `Subtask "${subtask.title}" status changed to ${subtask.status}.`);
         }
 
         // If body contains other fields, update them
         if (req.body.title) subtask.title = req.body.title;
         if (req.body.description) subtask.description = req.body.description;
+        if (req.body.dueDate !== undefined) subtask.dueDate = req.body.dueDate;
         if (req.body.priority) subtask.priority = req.body.priority;
 
         const updatedTask = await task.save();
 
-        // Log general update if not just toggling
+        // Log general update if not just status change
         if (req.body.title || req.body.description || req.body.priority) {
             await logHistory(updatedTask._id, 'Subtask Edited', `Subtask "${subtask.title}" details updated.`);
         }
