@@ -16,36 +16,38 @@ app.use(cors({
 app.use(express.json());
 
 // Database Connection
-let isDbConnected = false;
-const MONGO_URI = 'mongodb+srv://SCL:Administrator123@mydb.csyono0.mongodb.net/MyDB?retryWrites=true&w=majority';
-mongoose.connect(MONGO_URI)
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://SCL:Administrator123@mydb.csyono0.mongodb.net/MyDB?retryWrites=true&w=majority';
+
+// Connect to MongoDB with better error handling
+mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+})
     .then(() => {
         console.log('MongoDB Connected');
-        isDbConnected = true;
     })
-    .catch(err => console.error('MongoDB Connection Error:', err));
+    .catch(err => {
+        console.error('MongoDB Connection Error:', err);
+        // Don't exit in serverless environment
+        if (process.env.NODE_ENV !== 'production') {
+            console.error('Failed to connect to MongoDB. Please check your connection string.');
+        }
+    });
 
 // Routes
 const taskRoutes = require('./routes/taskRoutes');
 const projectRoutes = require('./routes/projectRoutes');
-
-// Middleware to check DB connection
-app.use((req, res, next) => {
-    if (!isDbConnected) {
-        return res.status(503).json({
-            message: 'Database not connected. Please check your MONGO_URI in backend/.env',
-            error: 'Service Unavailable'
-        });
-    }
-    next();
-});
 
 app.use('/api/tasks', taskRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
 app.get('/', (req, res) => {
-    res.send('Task Management API is running');
+    res.json({
+        message: 'Task Management API is running',
+        status: 'ok',
+        dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
 });
 
 // Start Server
