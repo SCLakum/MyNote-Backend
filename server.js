@@ -50,6 +50,22 @@ app.get('/', (req, res) => {
     });
 });
 
+// Health check endpoint with detailed MongoDB info
+app.get('/api/health', (req, res) => {
+    const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+    res.json({
+        status: 'ok',
+        mongodb: {
+            state: states[mongoose.connection.readyState],
+            readyState: mongoose.connection.readyState,
+            host: mongoose.connection.host || 'not connected',
+            hasMongoUri: !!process.env.MONGO_URI,
+            error: mongoose.connection.error?.message || null
+        },
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
