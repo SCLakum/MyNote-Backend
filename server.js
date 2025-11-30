@@ -17,7 +17,8 @@ app.use(express.json());
 
 // Database Connection
 let isDbConnected = false;
-mongoose.connect(process.env.MONGO_URI)
+const MONGO_URI = 'mongodb+srv://SCL:Administrator123@mydb.csyono0.mongodb.net/MyDB?retryWrites=true&w=majority';
+mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('MongoDB Connected');
         isDbConnected = true;
